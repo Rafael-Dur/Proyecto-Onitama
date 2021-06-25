@@ -91,8 +91,7 @@ actions (OnitamaGame board player (redcard, bluecard) _   []) = if (player == Re
     then [(RedPlayer, (createActionList board player redcard)), (BluePlayer, [])] 
     else (if (player == BluePlayer) then [(RedPlayer, []), (BluePlayer, (createActionList board player redcard) )]
     else [])
-    --error "No se pudieron procesar los movimientos"
-    --otherwise = error "Entra en el otherwise, linea de codigo 150"
+
 createActionList :: OnitamaBoard -> OnitamaPlayer -> [OnitamaCard] -> [OnitamaAction]
 createActionList board player card  = (foldr1 (++) [map (\x -> MoveAction playerPices cards x) (recoverMoves board playerPices cards)| playerPices <- (piecePlayer board player), cards <- card])
 
