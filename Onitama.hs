@@ -12,10 +12,10 @@ data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (
 data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
                 | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum)
 
-data OnitamaAction = MoveAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show)
+data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show)
 --Log de la accion a realizar, para poder interpretar y corroborar las acciones que vamos a realizar
 {-instance Show (OnitamaAction) where
-        show (MoveAction pice card destino) = "La OnitamaPiece " ++ show pice ++
+        show (OnitamaAction pice card destino) = "La OnitamaPiece " ++ show pice ++
                                           " Se encuentra en las cordenadas " ++ show stay ++ 
                                           " solicita moverse hacia " ++ show destino ++ 
                                           " mediante la OnitamaCard " ++ show card
@@ -82,10 +82,8 @@ deck = [Tiger, Dragon, Rabbit, Monkey, Crab, Elephant, Mantis, Crane, Frog, Boar
 activePlayer :: OnitamaGame -> OnitamaPlayer
 activePlayer (OnitamaGame _ j _ _ []) = j
 
---actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles
 --movimientos para el estado de juego dado. Sino la lista debe estar vacía.
---data OnitamaAction = MoveAction OnitamaPiece OnitamaCard  (Int, Int) deriving (Eq)
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions (OnitamaGame board player (redcard, bluecard) _   []) = if (player == RedPlayer) 
     then [(RedPlayer, (createActionList board player redcard)), (BluePlayer, [])] 
@@ -93,7 +91,7 @@ actions (OnitamaGame board player (redcard, bluecard) _   []) = if (player == Re
     else [])
 
 createActionList :: OnitamaBoard -> OnitamaPlayer -> [OnitamaCard] -> [OnitamaAction]
-createActionList board player card  = (foldr1 (++) [map (\x -> MoveAction playerPices cards x) (recoverMoves board playerPices cards)| playerPices <- (piecePlayer board player), cards <- card])
+createActionList board player card  = (foldr1 (++) [map (\x -> OnitamaAction playerPices cards x) (recoverMoves board playerPices cards)| playerPices <- (piecePlayer board player), cards <- card])
 
 
 colourPiece :: OnitamaPiece -> OnitamaPlayer
