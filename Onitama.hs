@@ -183,7 +183,6 @@ getBoard (Matrix board) = board
 
 {-
 
-
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
 
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
