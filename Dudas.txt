@@ -1,0 +1,15 @@
+1- Cómo se supone que se daría un empate en el juego? 
+Ya que nunca se terminan las cartas, y los movimientos son por turnos, 
+por lo que no se podrían capturar fichas a la vez.
+
+Cosas para implementar:
+
+data de fichas (deben tener un color, ya sea rojo o azul y un tipo, ya sea maestro o aprendiz).
+
+2- Ver cómo hacer el tablero. ¿Debería ser una matriz o 5 listas con 5 posiciones?
+
+3- Buscar información sobre el juego.
+
+4- Averiguar cómo hacer matrices en haskell.
+
+5- Dónde asociamos los movimientos de cada carta.
