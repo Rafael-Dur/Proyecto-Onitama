@@ -87,7 +87,7 @@ activePlayer (OnitamaGame _ j _ _ []) = j
 actions :: OnitamaGame -> [(OnitamaPlayer, [OnitamaAction])]
 actions (OnitamaGame board player (redcard, bluecard) _   []) = if (player == RedPlayer) 
     then [(RedPlayer, (createActionList board player redcard)), (BluePlayer, [])] 
-    else (if (player == BluePlayer) then [(RedPlayer, []), (BluePlayer, (createActionList board player redcard) )]
+    else (if (player == BluePlayer) then [(RedPlayer, []), (BluePlayer, (createActionList board player bluecard) )]
     else [])
 
 createActionList :: OnitamaBoard -> OnitamaPlayer -> [OnitamaCard] -> [OnitamaAction]
