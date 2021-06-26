@@ -5,24 +5,18 @@ import Data.Maybe (fromJust, listToMaybe)
 import Data.List (elemIndex)
 
 -- Los jugadores posibles, Rojo y Azul
-data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded)
+data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded, Read)
 --Los posibles tipos de piezas en el juego
-data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Show)
+data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Read)
 --Las posibles cartas que puede dar el juego
 data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
-                | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum)
+                | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum, Read)
 
-data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show)
---Log de la accion a realizar, para poder interpretar y corroborar las acciones que vamos a realizar
-{-instance Show (OnitamaAction) where
-        show (OnitamaAction pice card destino) = "La OnitamaPiece " ++ show pice ++
-                                          " Se encuentra en las cordenadas " ++ show stay ++ 
-                                          " solicita moverse hacia " ++ show destino ++ 
-                                          " mediante la OnitamaCard " ++ show card
-                                          where stay = getPositionPice pice-}
+data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show, Read)
 
-data GameResult p = Winner p | Loser p | Draw deriving (Eq, Show)
-data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq, Show)
+
+data GameResult p = Winner p | Loser p | Draw deriving (Eq)
+data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq)
 --data OnitamaBoard = Matrix [Piece, Piece, Piece, Piece, Piece] deriving (Eq, Show)
 --data Piece = Position [OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece] deriving (Eq, Show)
 
@@ -34,7 +28,7 @@ data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [Onita
 --El estado inicial del juego de Onitama, repartimos las cartas y elegimos quien comienza jugando
 --Suponemos qu eel mazo no viene siempre de la misma manera
 beginning :: [OnitamaCard] -> OnitamaGame
-beginning mazo = OnitamaGame (getInitialOnitamaBoard) (getInitialPlayer carta5) ([carta3, carta4], [carta1, carta2]) carta5  []
+beginning mazo = OnitamaGame (getInitialOnitamaBoard) (getInitialPlayer carta5) ([carta2, carta3], [carta4, carta5]) carta1  []
     where [carta1, carta2, carta3, carta4, carta5] = take 5 mazo
 
 
@@ -76,11 +70,11 @@ deck :: [OnitamaCard]
 deck = [Tiger, Dragon, Rabbit, Monkey, Crab, Elephant, Mantis, Crane, Frog, Boar, Goose, Horse, Rooster, Ox, Eel, Cobra]
 
 --Esta función determina a cuál jugador le toca mover, dado un estado de juego.
---activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
---activePlayer (OnitamaGame _ j _ _ []) = Just j
+activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
+activePlayer (OnitamaGame _ palyer _ _ ganador) = if (not (null ganador)) then Nothing else (Just player)
 --Cambio la firma revisar y ver como re implementar
-activePlayer :: OnitamaGame -> OnitamaPlayer
-activePlayer (OnitamaGame _ j _ _ []) = j
+--activePlayer :: OnitamaGame -> OnitamaPlayer
+--activePlayer (OnitamaGame _ j _ _ []) = j
 
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles
 --movimientos para el estado de juego dado. Sino la lista debe estar vacía.
@@ -179,27 +173,81 @@ getPiceInPos board (x,y) = (((getBoard board) !! (x-1)) !! (y-1))
 getBoard :: OnitamaBoard -> [[OnitamaPiece]]
 getBoard (Matrix board) = board
 
-nextBoard :: OnitamaBoard ->  OnitamaAction -> OnitamaBoard
-nextBoard (Matrix [[a]])
+--nextBoard :: OnitamaBoard ->  OnitamaAction -> OnitamaBoard
+--nextBoard (Matrix [[a]])
 
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
 next (OnitamaGame board player (redcard,bluecard) fifthcard gmr) activeplayer (OnitamaAction piece card pos)
     | gmr /= [] = (OnitamaGame board player (redcard,bluecard) fifthcard gmr)
     | player /= activeplayer = error "Wrong player"
-    | player == BluePlayer && elem (OnitamaAction piece card pos) (snd blue) = OnitamaGame ()
-    | player == RedPlayer && elem (OnitamaAction piece card pos) (snd red) = OnitamaGame ()
+    | player == BluePlayer && elem (OnitamaAction piece card pos) (snd blue) = actionWithPiece (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos)
+    | player == RedPlayer && elem (OnitamaAction piece card pos) (snd red) = actionWithPiece (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos)
     | otherwise = error "No valid action"
     where [red, blue] = actions (OnitamaGame board player (redcard,bluecard) fifthcard gmr)
 
-{-
+-- verificamos si hay pieza rival o empty
+checkDest :: OnitamaBoard -> (Int, Int) ->  OnitamaPiece
+checkDest board pos = (getPiceInPos board pos)
 
-next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
+-- dada la pieza en esa posicion vemos que accion ejecutar
+actionWithPiece :: OnitamaGame -> OnitamaAction -> OnitamaGame
+actionWithPiece game@(OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos)
+    | player == BluePlayer && pos == (1,3) = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner BluePlayer, Loser RedPlayer]) -- gano por llegar al santuario
+    | player == RedPlayer && pos == (5,3) = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner RedPlayer,Loser BluePlayer]) -- gano por llegar al santuario
+    | getPiceName getPiceInPosDest == "Apprentice" = newBoardToGame game (OnitamaAction piece card pos)
+    | getPiceName getPiceInPosDest == "Master" = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner player,Loser (lockOponnentPlayer player)])
+    | getPiceName getPiceInPosDest == "Empty" = newBoardToGame game (OnitamaAction piece card pos)
+    where getPiceInPosDest = checkDest board pos
+
+getPiceName :: OnitamaPiece -> String
+getPiceName  (Master player a) = "Master"
+getPiceName  (Apprentice player a) = "Apprentice"
+getPiceName  (Empty a) = "Empty"
+
+lockOponnentPlayer :: OnitamaPlayer -> OnitamaPlayer
+lockOponnentPlayer p = if p == RedPlayer then BluePlayer else RedPlayer 
+
+newBoardToGame :: OnitamaGame -> OnitamaAction -> OnitamaGame 
+newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos) = OnitamaGame (auxNewBoard board (OnitamaAction piece card pos)) (lockOponnentPlayer player) (changeCards (redcard,bluecard) card player) card [] 
+
+changeCards :: ([OnitamaCard], [OnitamaCard]) -> OnitamaCard -> OnitamaPlayer -> ([OnitamaCard], [OnitamaCard])
+changeCards (x:xs,blue) card RedPlayer = if x == card then (card:xs,blue) else (x:[card],blue)
+changeCards (red,x:xs) card BluePlayer = if x == card then (red,(card:xs)) else (x:[card],red)
+
+--Devolvemos el nuevo tablero con la solicitud del movimiento de pieza realizado con exito
+auxNewBoard :: OnitamaBoard -> OnitamaAction -> OnitamaBoard
+auxNewBoard board1 (OnitamaAction piece card (x,y)) = Matrix ((take (x-1) (getBoard board)) ++ [(changePiece ((getBoard board) !! (x-1)) (changeCordPice piece (x,y)) (x,y))] ++ (drop x (getBoard board))) where board = auxNewBoard2 board1 piece
+
+
+--En la posicion original d ela pieza le aplicamos un set y la dejamos como empty
+auxNewBoard2 :: OnitamaBoard -> OnitamaPiece -> OnitamaBoard
+auxNewBoard2 board (Master py (x,y)) = Matrix ((take (x-1) (getBoard board)) ++ [(changePiece ((getBoard board) !! (x-1)) (emptyPieceInOldCord (x,y)) (x,y))] ++ (drop x (getBoard board)))
+auxNewBoard2 board (Apprentice py (x,y)) = Matrix ((take (x-1) (getBoard board)) ++ [(changePiece ((getBoard board) !! (x-1)) (emptyPieceInOldCord (x,y)) (x,y))] ++ (drop x (getBoard board)))
+
+
+--Cambiamos la pieza en la corredenada exacta
+changePiece :: [OnitamaPiece] -> OnitamaPiece -> (Int, Int) -> [OnitamaPiece]
+changePiece board pice (x,y) = take (y-1) board ++ [pice] ++ drop y board
+
+emptyPieceInOldCord ::  (Int,Int) -> OnitamaPiece 
+emptyPieceInOldCord a = Empty a
+
+changeCordPice :: OnitamaPiece -> (Int, Int) -> OnitamaPiece
+changeCordPice (Master r j) newC = Master r newC
+changeCordPice (Apprentice r j) newC = Apprentice r newC
+changeCordPice (Empty j) newC = Empty newC
 
 result :: OnitamaGame -> [GameResult OnitamaPlayer]
+result (OnitamaGame _ _ _ _ finish) = finish
 
-showGame :: OnitamaGame -> String
+--Log de la accion a realizar, para poder interpretar y corroborar las acciones que vamos a realizar
+{-instance Show (OnitamaAction) where
+        show (OnitamaAction pice card destino) = "La OnitamaPiece " ++ show pice ++
+                                          " Se encuentra en las cordenadas " ++ show stay ++ 
+                                          " solicita moverse hacia " ++ show destino ++ 
+                                          " mediante la OnitamaCard " ++ show card
+                                          where stay = getPositionPice pice -}
 
 showAction :: OnitamaAction -> String
+showAction action = show action
 
-readAction :: String -> OnitamaAction
--}
