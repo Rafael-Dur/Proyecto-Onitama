@@ -170,7 +170,7 @@ couldMoveTo BluePlayer Ox (x,y) = [(x-1, y), (x+1, y), (x,y+1)]
 couldMoveTo RedPlayer Cobra (x,y) = [(x, y-1), (x+1, y+1), (x-1, y-1)]
 couldMoveTo BluePlayer Cobra (x,y) = [(x, y-1), (x-1, y+1), (x+1, y+1)]                    
 
---obtenemos uq ehay en una cordenada especifica
+--obtenemos lo que hay en una cordenada especifica
 --obtenemos la primer lista (coordenada de las x) y luego obtenemos el elemento de esa litsa(coordenada de la y) restamos uno por que parte de 0 el !!
 getPiceInPos :: OnitamaBoard -> (Int, Int) -> OnitamaPiece
 getPiceInPos board (x,y) = (((getBoard board) !! (x-1)) !! (y-1))
@@ -178,6 +178,18 @@ getPiceInPos board (x,y) = (((getBoard board) !! (x-1)) !! (y-1))
 --Obtenemos la lista de lista que forma el tablero
 getBoard :: OnitamaBoard -> [[OnitamaPiece]]
 getBoard (Matrix board) = board
+
+nextBoard :: OnitamaBoard ->  OnitamaAction -> OnitamaBoard
+nextBoard (Matrix [[a]])
+
+next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
+next (OnitamaGame board player (redcard,bluecard) fifthcard gmr) activeplayer (OnitamaAction piece card pos)
+    | gmr /= [] = (OnitamaGame board player (redcard,bluecard) fifthcard gmr)
+    | player /= activeplayer = error "Wrong player"
+    | player == BluePlayer && elem (OnitamaAction piece card pos) (snd blue) = OnitamaGame ()
+    | player == RedPlayer && elem (OnitamaAction piece card pos) (snd red) = OnitamaGame ()
+    | otherwise = error "No valid action"
+    where [red, blue] = actions (OnitamaGame board player (redcard,bluecard) fifthcard gmr)
 
 {-
 
