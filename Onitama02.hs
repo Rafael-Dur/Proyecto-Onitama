@@ -1,18 +1,18 @@
 --module Onitama where
-module Onitama where
+module Onitama02 where
 
 import Data.Maybe (fromJust, listToMaybe)
 import Data.List (elemIndex)
-import System.IO
+
 -- Los jugadores posibles, Rojo y Azul
-data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Enum, Bounded, Read)
+data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Enum, Show, Bounded, Read)
 --Los posibles tipos de piezas en el juego
 data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Read)
 --Las posibles cartas que puede dar el juego
 data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
-                | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Enum, Read)
+                | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum, Read)
 
-data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Read)
+data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show, Read)
 
 
 data GameResult p = Winner p | Loser p | Draw deriving (Eq)
@@ -22,7 +22,7 @@ data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq)
 
 --Definimos la estructura del juego con las cartas de ambos jugadores, la carta que sobra(la 5ta), un tablero inicial, un jugador y donde almacenar un resultado final
 --Primero tenemos el tablero, luego un jugador, luego sus cartas y por ultimo el resultado
-data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [OnitamaCard]) OnitamaCard [GameResult OnitamaPlayer]
+data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [OnitamaCard]) OnitamaCard [GameResult OnitamaPlayer] 
 
 --beginning :: [OnitamaCard] -> OnitamaGame
 --El estado inicial del juego de Onitama, repartimos las cartas y elegimos quien comienza jugando
@@ -33,13 +33,6 @@ beginning mazo = OnitamaGame (getInitialOnitamaBoard) (getInitialPlayer carta1) 
 
 
 --Armamos el tablero en su estado inicial
-{-getInitialOnitamaBoard :: OnitamaBoard
-getInitialOnitamaBoard = Matrix [Position [Apprentice RedPlayer (1,1), Apprentice RedPlayer (1,2), Master RedPlayer (1,3), Apprentice RedPlayer (1,4), Apprentice RedPlayer(1,5)],
-                                 Position [Empty (2,1), Empty (2,2), Empty (2,3), Empty (2,4), Empty (2,5)],
-                                 Position [Empty (3,1), Empty (3,2), Empty (3,3), Empty (3,4), Empty (3,5)],
-                                 Position [Empty (4,1), Empty (4,2), Empty (4,3), Empty (4,4), Empty (4,5)], 
-                                 Position [Apprentice BluePlayer (5,1), Apprentice BluePlayer (5,2), Master BluePlayer (5,3), Apprentice BluePlayer (5,4), Apprentice BluePlayer (5,5)]] -}
-
 getInitialOnitamaBoard :: OnitamaBoard
 getInitialOnitamaBoard = Matrix [[Apprentice RedPlayer (1,1), Apprentice RedPlayer (1,2), Master RedPlayer (1,3), Apprentice RedPlayer (1,4), Apprentice RedPlayer(1,5)],
                                  [Empty (2,1), Empty (2,2), Empty (2,3), Empty (2,4), Empty (2,5)],
@@ -66,15 +59,10 @@ getPositionPice (Master _ j) = j
 getPositionPice (Apprentice _ j) = j
 getPositionPice (Empty j) = j
 
-deck :: [OnitamaCard]
-deck = [Tiger, Dragon, Rabbit, Monkey, Crab, Elephant, Mantis, Crane, Frog, Boar, Goose, Horse, Rooster, Ox, Eel, Cobra]
-
 --Esta función determina a cuál jugador le toca mover, dado un estado de juego.
 activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
 activePlayer (OnitamaGame _ player _ _ ganador) = if (not (null ganador)) then Nothing else (Just player)
---Cambio la firma revisar y ver como re implementar
---activePlayer :: OnitamaGame -> OnitamaPlayer
---activePlayer (OnitamaGame _ j _ _ []) = j
+
 
 --La lista debe incluir una y solo una tupla para cada jugador. Si el jugador está activo, la lista asociada debe incluir todos sus posibles
 --movimientos para el estado de juego dado. Sino la lista debe estar vacía.
@@ -113,7 +101,7 @@ recoverMoves board piece card = if ((getPiceInPos board (getPositionPice piece))
     else error "No se encontro la pieza"
     where listMovesValid = (checkPosInBoard (couldMoveTo (colourPiece piece) card (getPositionPice piece)))
 
-        --validamos si la pieza puede ir a la posicion dada controlamos que no haya una pieza nuestra(del color del jugador)
+--validamos si la pieza puede ir a la posicion dada controlamos que no haya una pieza nuestra(del color del jugador)
 validMove :: OnitamaBoard -> OnitamaPiece -> (Int, Int) ->  Bool
 validMove board pieza pos  
     |(validPiece (pieceInBoard)) && ((colourPiece pieza) == (colourPiece (pieceInBoard))) = False
@@ -173,8 +161,6 @@ getPiceInPos board (x,y) = (((getBoard board) !! (x-1)) !! (y-1))
 getBoard :: OnitamaBoard -> [[OnitamaPiece]]
 getBoard (Matrix board) = board
 
---nextBoard :: OnitamaBoard ->  OnitamaAction -> OnitamaBoard
---nextBoard (Matrix [[a]])
 
 next :: OnitamaGame -> OnitamaPlayer -> OnitamaAction -> OnitamaGame
 next (OnitamaGame board player (redcard,bluecard) fifthcard gmr) activeplayer (OnitamaAction piece card pos)
@@ -191,11 +177,11 @@ checkDest board pos = (getPiceInPos board pos)
 
 -- dada la pieza en esa posicion vemos que accion ejecutar
 actionWithPiece :: OnitamaGame -> OnitamaAction -> OnitamaGame
-actionWithPiece game@(OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos)
-    | player == BluePlayer && pos == (1,3) = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner BluePlayer, Loser RedPlayer]) -- gano por llegar al santuario
-    | player == RedPlayer && pos == (5,3) = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner RedPlayer,Loser BluePlayer]) -- gano por llegar al santuario
+actionWithPiece game@(OnitamaGame board player (redcard,bluecard) fifthcard gmr) action@(OnitamaAction piece card pos)
+    | player == BluePlayer && pos == (1,3) = newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard [Winner BluePlayer, Loser RedPlayer]) action -- gano por llegar al santuario
+    | player == RedPlayer && pos == (5,3) =  newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard [Winner RedPlayer,Loser BluePlayer]) action -- gano por llegar al santuario
     | getPiceName getPiceInPosDest == "Apprentice" = newBoardToGame game (OnitamaAction piece card pos)
-    | getPiceName getPiceInPosDest == "Master" = (OnitamaGame board player (redcard,bluecard) fifthcard [Winner player,Loser (lockOponnentPlayer player)])
+    | getPiceName getPiceInPosDest == "Master" = newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard [Winner player,Loser (lockOponnentPlayer player)]) action
     | getPiceName getPiceInPosDest == "Empty" = newBoardToGame game (OnitamaAction piece card pos)
     where getPiceInPosDest = checkDest board pos
 
@@ -208,7 +194,7 @@ lockOponnentPlayer :: OnitamaPlayer -> OnitamaPlayer
 lockOponnentPlayer p = if p == RedPlayer then BluePlayer else RedPlayer 
 
 newBoardToGame :: OnitamaGame -> OnitamaAction -> OnitamaGame 
-newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos) = OnitamaGame (auxNewBoard board (OnitamaAction piece card pos)) (lockOponnentPlayer player) (changeCards (redcard,bluecard) card fifthcard player) card [] 
+newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos) = OnitamaGame (auxNewBoard board (OnitamaAction piece card pos)) (lockOponnentPlayer player) (changeCards (redcard,bluecard) card fifthcard player) card gmr 
 
 changeCards :: ([OnitamaCard], [OnitamaCard]) -> OnitamaCard -> OnitamaCard -> OnitamaPlayer -> ([OnitamaCard], [OnitamaCard])
 changeCards (x:xs,blue) card fifthcard RedPlayer = if x == card then (fifthcard:xs,blue) else (x:[fifthcard],blue)
@@ -248,33 +234,34 @@ result (OnitamaGame _ _ _ _ finish) = finish
                                           " mediante la OnitamaCard " ++ show card
                                           where stay = getPositionPice pice -}
 
---showAction :: OnitamaAction -> String
---showAction action = show action
+showAction :: OnitamaAction -> String
+showAction action = show action
+
+readAction :: String -> OnitamaAction
+readAction action = read action
 
 instance Show (OnitamaPiece) where 
     show (Master RedPlayer a) = "MR"
-    show (Apprentice RedPlayer a) = "aR"
+    show (Apprentice RedPlayer a) = "ar"
     show (Master BluePlayer a) = "MB"
-    show (Apprentice BluePlayer a) = "aB"
-    show (Empty a) = "X"
+    show (Apprentice BluePlayer a) = "ab"
+    show (Empty a) = "x "
 
 instance (Show p) => Show (GameResult p) where
     show (Winner p) = "Ganó el jugador: " ++ show p
     show (Loser p) = "Perdió el jugador: " ++ show p
-    show (Draw) = "Empate. No ganó ningún jugador"
+    show (Draw) = "No deberia llegar nunca, no se puede empatar"
 
 instance Show (OnitamaBoard) where
     show (Matrix x) = unlines (concatMap (lines.show) x)
 
-
-
 showGame :: OnitamaGame -> String
-showGame (OnitamaGame board player playerCard otherCard []) = ("El turno actual es del jugador: " 
-                                                        ++"\n" ++ "Las cartas del jugador rojo son: " 
-                                                        ++"\n" ++ "Las cartas del jugador azul son: "  
-                                                        ++"\n" ++ "Carta en espera: " 
+showGame (OnitamaGame board player (red, blue) otherCard []) = ("El turno actual es del jugador: " ++ show player
+                                                        ++"\n" ++ "Las cartas del jugador rojo son: " ++ show (red)
+                                                        ++"\n" ++ "Las cartas del jugador azul son: "  ++ show (blue)
+                                                        ++"\n" ++ "Carta en espera: "  ++ show otherCard
                                                         ++"\n" ++ "El tablero es el siguiente: "
-                                                        ++"\n" ++ (show board))
-showGame (OnitamaGame _ _ _ _ finish) = "aaa"
-
+                                                        ++('\n':(show board)))
+showGame (OnitamaGame board _ _ _ finish) = "Tablero final del juego, ganador y perdedor: \n" ++ foldl1 (\x y -> x ++ "\n" ++ y ++ "\n") (concatMap (lines.show) finish)
+                                            ++('\n':(show board))
 
