@@ -7,7 +7,7 @@ import Data.List (elemIndex)
 -- Los jugadores posibles, Rojo y Azul
 data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded, Read)
 --Los posibles tipos de piezas en el juego
-data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Read)
+data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Show, Read)
 --Las posibles cartas que puede dar el juego
 data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
                 | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum, Read)
@@ -15,8 +15,8 @@ data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
 data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving (Eq, Show, Read)
 
 
-data GameResult p = Winner p | Loser p | Draw deriving (Eq)
-data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq)
+data GameResult p = Winner p | Loser p | Draw deriving (Eq, Show)
+data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq, Show)
 --data OnitamaBoard = Matrix [Piece, Piece, Piece, Piece, Piece] deriving (Eq, Show)
 --data Piece = Position [OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece] deriving (Eq, Show)
 
@@ -28,7 +28,7 @@ data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [Onita
 --El estado inicial del juego de Onitama, repartimos las cartas y elegimos quien comienza jugando
 --Suponemos qu eel mazo no viene siempre de la misma manera
 beginning :: [OnitamaCard] -> OnitamaGame
-beginning mazo = OnitamaGame (getInitialOnitamaBoard) (getInitialPlayer carta5) ([carta2, carta3], [carta4, carta5]) carta1  []
+beginning mazo = OnitamaGame (getInitialOnitamaBoard) (getInitialPlayer carta1) ([carta2, carta3], [carta4, carta5]) carta1  []
     where [carta1, carta2, carta3, carta4, carta5] = take 5 mazo
 
 
@@ -71,7 +71,7 @@ deck = [Tiger, Dragon, Rabbit, Monkey, Crab, Elephant, Mantis, Crane, Frog, Boar
 
 --Esta función determina a cuál jugador le toca mover, dado un estado de juego.
 activePlayer :: OnitamaGame -> Maybe OnitamaPlayer
-activePlayer (OnitamaGame _ palyer _ _ ganador) = if (not (null ganador)) then Nothing else (Just player)
+activePlayer (OnitamaGame _ player _ _ ganador) = if (not (null ganador)) then Nothing else (Just player)
 --Cambio la firma revisar y ver como re implementar
 --activePlayer :: OnitamaGame -> OnitamaPlayer
 --activePlayer (OnitamaGame _ j _ _ []) = j
@@ -208,11 +208,11 @@ lockOponnentPlayer :: OnitamaPlayer -> OnitamaPlayer
 lockOponnentPlayer p = if p == RedPlayer then BluePlayer else RedPlayer 
 
 newBoardToGame :: OnitamaGame -> OnitamaAction -> OnitamaGame 
-newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos) = OnitamaGame (auxNewBoard board (OnitamaAction piece card pos)) (lockOponnentPlayer player) (changeCards (redcard,bluecard) card player) card [] 
+newBoardToGame (OnitamaGame board player (redcard,bluecard) fifthcard gmr) (OnitamaAction piece card pos) = OnitamaGame (auxNewBoard board (OnitamaAction piece card pos)) (lockOponnentPlayer player) (changeCards (redcard,bluecard) card fifthcard player) card [] 
 
-changeCards :: ([OnitamaCard], [OnitamaCard]) -> OnitamaCard -> OnitamaPlayer -> ([OnitamaCard], [OnitamaCard])
-changeCards (x:xs,blue) card RedPlayer = if x == card then (card:xs,blue) else (x:[card],blue)
-changeCards (red,x:xs) card BluePlayer = if x == card then (red,(card:xs)) else (x:[card],red)
+changeCards :: ([OnitamaCard], [OnitamaCard]) -> OnitamaCard -> OnitamaCard -> OnitamaPlayer -> ([OnitamaCard], [OnitamaCard])
+changeCards (x:xs,blue) card fifthcard RedPlayer = if x == card then (fifthcard:xs,blue) else (x:[fifthcard],blue)
+changeCards (red,x:xs) card fifthcard BluePlayer = if x == card then (red,(fifthcard:xs)) else (red,x:[fifthcard])
 
 --Devolvemos el nuevo tablero con la solicitud del movimiento de pieza realizado con exito
 auxNewBoard :: OnitamaBoard -> OnitamaAction -> OnitamaBoard
@@ -250,4 +250,3 @@ result (OnitamaGame _ _ _ _ finish) = finish
 
 showAction :: OnitamaAction -> String
 showAction action = show action
-
