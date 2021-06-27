@@ -7,7 +7,7 @@ import Data.List (elemIndex)
 -- Los jugadores posibles, Rojo y Azul
 data OnitamaPlayer = RedPlayer | BluePlayer deriving (Eq, Show, Enum, Bounded, Read)
 --Los posibles tipos de piezas en el juego
-data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Show, Read)
+data OnitamaPiece = Master OnitamaPlayer (Int, Int) | Apprentice OnitamaPlayer (Int, Int) | Empty (Int, Int)  deriving (Eq, Read)
 --Las posibles cartas que puede dar el juego
 data OnitamaCard = Tiger | Dragon | Rabbit | Monkey | Crab | Elephant
                 | Mantis | Crane | Frog | Boar | Goose | Horse | Rooster | Ox | Eel | Cobra deriving (Eq, Show, Enum, Read)
@@ -16,13 +16,13 @@ data OnitamaAction = OnitamaAction OnitamaPiece OnitamaCard (Int, Int) deriving 
 
 
 data GameResult p = Winner p | Loser p | Draw deriving (Eq, Show)
-data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq, Show)
+data OnitamaBoard = Matrix [[OnitamaPiece]] deriving (Eq)
 --data OnitamaBoard = Matrix [Piece, Piece, Piece, Piece, Piece] deriving (Eq, Show)
 --data Piece = Position [OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece, OnitamaPiece] deriving (Eq, Show)
 
 --Definimos la estructura del juego con las cartas de ambos jugadores, la carta que sobra(la 5ta), un tablero inicial, un jugador y donde almacenar un resultado final
 --Primero tenemos el tablero, luego un jugador, luego sus cartas y por ultimo el resultado
-data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [OnitamaCard]) OnitamaCard [GameResult OnitamaPlayer] deriving (Show)
+data OnitamaGame = OnitamaGame OnitamaBoard OnitamaPlayer ([OnitamaCard], [OnitamaCard]) OnitamaCard [GameResult OnitamaPlayer]
 
 --beginning :: [OnitamaCard] -> OnitamaGame
 --El estado inicial del juego de Onitama, repartimos las cartas y elegimos quien comienza jugando
@@ -250,3 +250,29 @@ result (OnitamaGame _ _ _ _ finish) = finish
 
 showAction :: OnitamaAction -> String
 showAction action = show action
+
+instance Show (OnitamaPiece) where 
+    show (Master RedPlayer a) = "MR"
+    show (Apprentice RedPlayer a) = "aR"
+    show (Master BluePlayer a) = "MB"
+    show (Apprentice BluePlayer a) = "aB"
+    show (Empty a) = "X"
+
+instance (Show p) => Show (GameResult p) where
+    show (Winner p) = "Ganó el jugador: " ++ p
+    show (Loser p) = "Perdió el jugador: " ++ p
+    show (Draw p) = "Empate. No ganó ningún jugador"
+
+instance Show (OnitamaBoard) where
+    show (OnitamaBoard x)
+
+
+
+showGame :: OnitamaGame -> String
+showGame (board player playerCard otherCard []) = "El turno actual es del jugador: " ++ player
+                                                "\n" ++ "Las cartas del jugador rojo son: " ++ fst playerCard
+                                                "\n" ++ "Las cartas del jugador azul son: " ++ snd playerCard
+                                                "\n" ++ "Carta en espera: " ++ otherCard
+                                                "\n" ++ ""
+
+
